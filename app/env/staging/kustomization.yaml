@@ -1,14 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: minecraft-staging
-
 resources:
-  - ../../base
-
+- ../../base
 images:
-  - name: docker.io/itzg/minecraft-server
-    newTag: "2026.6.0"
-
+- name: docker.io/itzg/minecraft-server
+  newTag: 2026.7.0
+  digest: sha256:5ffbc91d933e2f0e194a4f49674a2d17b65bb051c86e61961a6c775312ef61c0
 patches:
-  - path: patch.yaml
+- path: patch.yaml
