@@ -10,9 +10,11 @@ spec:
   subscriptions:
     - image:
         # The itzg/minecraft-server image publishes clean SemVer tags
-        # (e.g. 2026.6.0, 2026.6.1, 2026.7.0). strictSemvers ignores the
-        # java-suffixed / "latest" / "stable" tags so promotions stay predictable.
+        # (e.g. 2026.6.0, 2026.6.1, 2026.7.0) alongside java-suffixed variants
+        # (2026.7.0-java8, ...). allowTags restricts discovery to plain X.Y.Z
+        # release tags so promotions stay predictable.
         repoURL: docker.io/itzg/minecraft-server
         imageSelectionStrategy: SemVer
         strictSemvers: true
+        allowTags: ^[0-9]+\.[0-9]+\.[0-9]+$
         discoveryLimit: 20

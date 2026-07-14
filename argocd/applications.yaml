@@ -7,6 +7,10 @@ kind: Application
 metadata:
   name: minecraft-staging
   namespace: argocd
+  annotations:
+    # Consents to the Kargo "staging" Stage in the "minecraft" project driving
+    # this Application. Without it, argocd-update fails with "not authorized".
+    kargo.akuity.io/authorized-stage: "minecraft:staging"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -30,6 +34,8 @@ kind: Application
 metadata:
   name: minecraft-prod
   namespace: argocd
+  annotations:
+    kargo.akuity.io/authorized-stage: "minecraft:prod"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

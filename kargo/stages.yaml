@@ -31,10 +31,10 @@ spec:
               - branch: main
                 path: ./out
         - uses: kustomize-set-image
+          # No images list: Kargo sets every image from the promoted Freight.
+          # There is only one image subscription, so there is no ambiguity.
           config:
             path: ./out/app/env/staging
-            images:
-              - image: docker.io/itzg/minecraft-server
         - uses: git-commit
           as: commit
           config:
@@ -80,10 +80,9 @@ spec:
               - branch: main
                 path: ./out
         - uses: kustomize-set-image
+          # No images list: Kargo sets every image from the promoted Freight.
           config:
             path: ./out/app/env/prod
-            images:
-              - image: docker.io/itzg/minecraft-server
         - uses: git-commit
           as: commit
           config:
