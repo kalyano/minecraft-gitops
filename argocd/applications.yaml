@@ -20,7 +20,7 @@ spec:
     targetRevision: main
     path: app/env/staging
   destination:
-    server: https://kubernetes.default.svc
+    server: http://cluster-demo:8001
     namespace: minecraft-staging
   syncPolicy:
     automated:
@@ -45,7 +45,7 @@ spec:
     targetRevision: main
     path: app/env/prod
   destination:
-    server: https://kubernetes.default.svc
+    server: http://cluster-demo:8001
     namespace: minecraft-prod
   syncPolicy:
     # prod keeps prune/selfHeal off by default so a human confirms the sync.
