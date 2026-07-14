@@ -1,0 +1,7 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Project
+metadata:
+  name: minecraft
+# A Kargo Project is the unit of tenancy. Its name becomes the namespace that
+# holds this project's Warehouse and Stages. Repo credentials and RBAC are
+# scoped here.

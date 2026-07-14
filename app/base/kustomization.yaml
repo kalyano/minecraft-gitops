@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - deployment.yaml
+  - service.yaml
+
+# Baseline image. Each environment overlay overrides newTag, and Kargo edits
+# the overlay's kustomization (not this one) when it promotes new Freight.
+images:
+  - name: docker.io/itzg/minecraft-server
+    newTag: "2026.6.0"

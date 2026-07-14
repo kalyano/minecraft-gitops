@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minecraft
+  labels:
+    app: minecraft
+spec:
+  replicas: 1
+  # Minecraft holds a single world lock; never run >1 replica against the same volume.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: minecraft
+  template:
+    metadata:
+      labels:
+        app: minecraft
+    spec:
+      containers:
+        - name: minecraft
+          # Tag is overwritten per-environment by Kustomize; Kargo promotes new SemVer tags.
+          image: docker.io/itzg/minecraft-server:2026.6.0
+          imagePullPolicy: IfNotPresent
+          env:
+            # Accepting the Minecraft EULA is mandatory for the server to start.
+            - name: EULA
+              value: "TRUE"
+            - name: TYPE
+              value: "VANILLA"
+            - name: MEMORY
+              value: "1G"
+            # Per-environment values (MOTD, DIFFICULTY, MODE, MAX_PLAYERS) are
+            # layered in by each overlay's patch.yaml.
+          ports:
+            - name: minecraft
+              containerPort: 25565
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "1Gi"
+            limits:
+              cpu: "1000m"
+              memory: "1536Mi"
+          # Minecraft can take 30-60s to generate a world on first boot, so we
+          # gate readiness behind a generous startup probe before health checks.
+          startupProbe:
+            tcpSocket:
+              port: 25565
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 25565
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            tcpSocket:
+              port: 25565
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          volumeMounts:
+            - name: world-data
+              mountPath: /data
+      volumes:
+        # emptyDir = the world is intentionally ephemeral for this demo. See the
+        # README "Assumptions" section for how you would make this a PVC.
+        - name: world-data
+          emptyDir: {}

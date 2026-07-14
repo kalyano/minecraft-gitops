@@ -1,0 +1,48 @@
+# One Argo CD Application per environment, each pointed at its Kustomize overlay.
+# Kargo owns the image tag in Git; Argo CD reconciles Git into the cluster.
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: minecraft-staging
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kalyano/minecraft-gitops.git
+    targetRevision: main
+    path: app/env/staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: minecraft-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: minecraft-prod
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kalyano/minecraft-gitops.git
+    targetRevision: main
+    path: app/env/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: minecraft-prod
+  syncPolicy:
+    # prod keeps prune/selfHeal off by default so a human confirms the sync.
+    # Flip to automated once you trust the pipeline.
+    syncOptions:
+      - CreateNamespace=true

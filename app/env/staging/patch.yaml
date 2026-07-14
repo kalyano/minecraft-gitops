@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minecraft
+spec:
+  template:
+    spec:
+      containers:
+        - name: minecraft
+          env:
+            - name: MOTD
+              value: "STAGING - release candidate"
+            - name: DIFFICULTY
+              value: "normal"
+            - name: MODE
+              value: "survival"
+            - name: MAX_PLAYERS
+              value: "10"

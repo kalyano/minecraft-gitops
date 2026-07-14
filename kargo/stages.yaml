@@ -1,0 +1,104 @@
+# Two-stage delivery pipeline: staging -> prod.
+# Each Stage clones the GitOps repo, rewrites the Minecraft image tag in its
+# Kustomize overlay, commits + pushes, then tells Argo CD to sync.
+
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: staging
+  namespace: minecraft
+  annotations:
+    kargo.akuity.io/color: amber
+spec:
+  # staging takes Freight straight from the Warehouse (the pipeline entry point).
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: minecraft-server
+      sources:
+        direct: true
+  promotionTemplate:
+    spec:
+      vars:
+        - name: gitRepo
+          value: https://github.com/kalyano/minecraft-gitops.git
+      steps:
+        - uses: git-clone
+          config:
+            repoURL: ${{ vars.gitRepo }}
+            checkout:
+              - branch: main
+                path: ./out
+        - uses: kustomize-set-image
+          config:
+            path: ./out/app/env/staging
+            images:
+              - image: docker.io/itzg/minecraft-server
+        - uses: git-commit
+          as: commit
+          config:
+            path: ./out
+            message: "kargo: promote minecraft to staging"
+        - uses: git-push
+          config:
+            path: ./out
+        - uses: argocd-update
+          config:
+            apps:
+              - name: minecraft-staging
+                sources:
+                  - repoURL: ${{ vars.gitRepo }}
+                    desiredRevision: ${{ outputs.commit.commit }}
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: minecraft
+  annotations:
+    kargo.akuity.io/color: violet
+spec:
+  # prod can only receive Freight already verified in staging.
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: minecraft-server
+      sources:
+        stages:
+          - staging
+  promotionTemplate:
+    spec:
+      vars:
+        - name: gitRepo
+          value: https://github.com/kalyano/minecraft-gitops.git
+      steps:
+        - uses: git-clone
+          config:
+            repoURL: ${{ vars.gitRepo }}
+            checkout:
+              - branch: main
+                path: ./out
+        - uses: kustomize-set-image
+          config:
+            path: ./out/app/env/prod
+            images:
+              - image: docker.io/itzg/minecraft-server
+        - uses: git-commit
+          as: commit
+          config:
+            path: ./out
+            message: "kargo: promote minecraft to prod"
+        - uses: git-push
+          config:
+            path: ./out
+        # To make prod a pull-request gate instead of a direct commit, replace
+        # git-push above with git-push (generateTargetBranch: true) + git-open-pr
+        # + git-wait-for-pr. See: https://docs.kargo.io/user-guide/reference-docs/promotion-steps
+        - uses: argocd-update
+          config:
+            apps:
+              - name: minecraft-prod
+                sources:
+                  - repoURL: ${{ vars.gitRepo }}
+                    desiredRevision: ${{ outputs.commit.commit }}
